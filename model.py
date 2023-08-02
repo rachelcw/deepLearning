@@ -32,43 +32,65 @@ def accuracy_th(y_true, y_pred):
 # POOL_TYPE = ["max", "avg"] # lowers time complexity
 
 # create a CNN model per protein. input is one_hot seqs and output is prediction of probability of 6 class_lables
-def create_CNN_per_protein(X,Y,NUM_KERNELS=128,EPHOCHS=3,STRIDES=1,STRIDES_BIG=3,DROP_OUT=0.1,KERNEL_SIZE=[3,5],LAYERS=[128,128],
+def create_CNN_per_protein(X,Y,model_name,NUM_KERNELS=128,EPHOCHS=2,STRIDES=1,STRIDES_BIG=3,DROP_OUT=0.1,KERNEL_SIZE=[3,5],LAYERS=[64,32,32],
                            FINAL_ACTIVATION_FUNCTION = "sigmoid",LR = 0.003,BATCH_SIZE = 256):
     # shuffle data
     rng = np.random.default_rng(32)
-    shuf_inds = rng.permutation(X.shape[0])
-    X = X[shuf_inds]#[:int(CUT_DATA)]
-    Y = Y[shuf_inds]#[:int(CUT_DATA)]
+    CUT_DATA = int(1e6)
+    print(f'X shape is: {X.shape}')
+    print(f'Y shape is: {Y.shape}')
+    shuf_inds = rng.choice(X.shape[0], size=CUT_DATA, replace=False)
+    print(f'shuf_inds shape is: {shuf_inds.shape} ', max(shuf_inds))
+    X = X[shuf_inds]
+    Y = Y[shuf_inds]
 
     model = Sequential()
-    model.add(Conv1D(filters=NUM_KERNELS, kernel_size=KERNEL_SIZE[0], strides=STRIDES,
-                    kernel_initializer=initializers.RandomNormal(stddev=0.01), activation='relu',
-                    input_shape=X.shape[1:], use_bias=True, bias_initializer='RandomNormal'))
-    
-    model.add(Conv1D(filters=NUM_KERNELS, kernel_size=KERNEL_SIZE[1], strides=STRIDES_BIG))
-    # model.add(MaxPooling1D(pool_size=POOL_SIZE, strides=None, padding='valid', data_format='channels_last')) # MAYBE USE CONV KERNEL HERE INSTEAD 
+    ############## Yaron's model #######################
+    model.add(Conv1D(filters=512, kernel_size=8, strides=1,
+                   kernel_initializer='RandomNormal',
+                   activation='relu',
+                   input_shape=X.shape[1:], use_bias=True,
+                   bias_initializer='RandomNormal'))
+    model.add(MaxPooling1D(pool_size=5, strides=None,
+                               padding='valid',
+                               data_format='channels_last'))
     model.add(Flatten())
-    model.add(Dropout(DROP_OUT))
-    # dense layers
     for layer_size in LAYERS:
-                print(f'the layer size is: {layer_size}')
-                model.add(Dense(layer_size, activation='relu'))
-                model.add(Dropout(DROP_OUT))
-    # output layer
-    model.add(Dense(6, activation=FINAL_ACTIVATION_FUNCTION)) 
-    model.compile(optimizer=Adam(learning_rate = LR), loss="binary_crossentropy", metrics=[accuracy_th])
-    model.summary()
+        print(f'the layer size is: {layer_size}')
+        model.add(Dense(layer_size, activation='relu'))
+    model.add(Dense(6, activation='sigmoid'))
+
+    Adam = keras.optimizers.Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, decay=1e-5, amsgrad=False)
+    model.compile(optimizer=Adam, loss='binary_crossentropy',metrics=[accuracy_th])
+    ############################## our model ########################################
+    # model.add(Conv1D(filters=NUM_KERNELS, kernel_size=KERNEL_SIZE[0], strides=STRIDES,
+    #                 kernel_initializer=initializers.RandomNormal(stddev=0.01), activation='relu',
+    #                 input_shape=X.shape[1:], use_bias=True, bias_initializer='RandomNormal'))
     
+    # model.add(Conv1D(filters=NUM_KERNELS, kernel_size=KERNEL_SIZE[1], strides=STRIDES_BIG))
+    # # model.add(MaxPooling1D(pool_size=POOL_SIZE, strides=None, padding='valid', data_format='channels_last')) # MAYBE USE CONV KERNEL HERE INSTEAD 
+    # model.add(Flatten())
+    # model.add(Dropout(DROP_OUT))
+    # # dense layers
+    # for layer_size in LAYERS:
+    #             print(f'the layer size is: {layer_size}')
+    #             model.add(Dense(layer_size, activation='relu'))
+    #             model.add(Dropout(DROP_OUT))
+    # # output layer
+    # model.add(Dense(6, activation=FINAL_ACTIVATION_FUNCTION)) 
+    # model.compile(optimizer=Adam(learning_rate = LR), loss="binary_crossentropy", metrics=[accuracy_th])
+    model.summary()
+    ##########################################
     # Compile the model with Optimizer, Loss Function and Metrics
-    run_hist_1 = model.fit(X, Y, batch_size=BATCH_SIZE, epochs=EPHOCHS, validation_split=0.25, shuffle=True, use_multiprocessing=MultiProcess, workers=Workers)
-    model.save('/data01/private/resources/RACHELI_EDEN_SHARED/DL_PROJ/model_multiclass_script1.h5') # save the model
-    model = keras.models.load_model("/data01/private/resources/RACHELI_EDEN_SHARED/DL_PROJ/model_multiclass_script1.h5", custom_objects={"accuracy_th":accuracy_th})
+    run_hist_1 = model.fit(X, Y, batch_size=BATCH_SIZE, epochs=EPHOCHS, shuffle=True, use_multiprocessing=MultiProcess, workers=Workers, verbose=2)
+    model.save(f'/data01/private/resources/RACHELI_EDEN_SHARED/DL_PROJ/{model_name}.h5') # save the model
+    model = keras.models.load_model(f'/data01/private/resources/RACHELI_EDEN_SHARED/DL_PROJ/{model_name}.h5', custom_objects={"accuracy_th":accuracy_th})
     return model
 
 # create features: MULTICLASS parallelize the prediction + output -  suppose predict gives N dim vector:
 def find_proteins_features(model, shifts_RNAcompete_master_list):
     N = 6 # number of classes
-    prediction = model.predict(shifts_RNAcompete_master_list, use_multiprocessing=MultiProcess, workers=Workers)
+    prediction = model.predict(shifts_RNAcompete_master_list, use_multiprocessing=MultiProcess, workers=Workers, verbose=2)
     _,num_seqs,_ = create_RNAcompete_master_list()
     prediction = np.reshape(prediction, (num_seqs, -1, N))
     # fetures - 6 max + 6 min per seq with best shift

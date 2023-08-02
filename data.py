@@ -52,10 +52,10 @@ def create_master_list(RBNS_per_protein):
                 master_list[n] = seq # seq
                 n += 1
     del lines
-    rand_master_list = np.empty((LIMIT_FILE_N_SEQ_READ * 2), dtype=f'|S{L_RBNS}') # sequences
+    rand_master_list = np.empty(LIMIT_FILE_N_SEQ_READ , dtype=f'|S{L_RBNS}') # sequences
     ABC = [b'A', b'C', b'G', b'T']
     random.seed(613)
-    rand_master_list = np.array([b''.join([ABC[random.randint(0,3)] for _ in range(L_RBNS)]) for _ in range(LIMIT_FILE_N_SEQ_READ * 2)], dtype=f'|S{L_RBNS}')
+    rand_master_list = np.array([b''.join([ABC[random.randint(0,3)] for _ in range(L_RBNS)]) for _ in range(LIMIT_FILE_N_SEQ_READ)], dtype=f'|S{L_RBNS}')
     master_list = np.concatenate((master_list, rand_master_list))
     return master_list
 
@@ -67,7 +67,7 @@ def create_class_labels(RBNS_per_protein,protein):
         if file != str(protein + '_input.seq'):
             class_lables[LIMIT_FILE_N_SEQ_READ * i: LIMIT_FILE_N_SEQ_READ * (i + 1), i:] = 1
     random.seed(613)
-    rand_class_labels = np.zeros((LIMIT_FILE_N_SEQ_READ * 2, len(RBNS_per_protein)), dtype=np.int8)
+    rand_class_labels = np.zeros((LIMIT_FILE_N_SEQ_READ, len(RBNS_per_protein)), dtype=np.int8)
     class_lables = np.concatenate((class_lables, rand_class_labels))
     return class_lables
 

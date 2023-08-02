@@ -9,10 +9,12 @@ import random
 import keras
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation, Flatten, Conv1D
+from keras.layers import Dense, Dropout, Activation, Flatten, Conv1D, MaxPooling1D
 from keras import initializers
 from keras.optimizers import Adam #, SGD, RMSprop
 import datetime
+import scipy.stats as stats
+
 
 # 2) constants and hyperparameters
 Workers = 80
@@ -20,7 +22,7 @@ MultiProcess = True
 L_RBNS = 20 # length of each sequence in RBNS data
 O = int(1e7) # for initializing big arrays, helps reduce runtime
 # LIMIT_FILE_N_SEQ_READ = 1000 # limit the amount of seq we read from file, helps reduce runtime
-LIMIT_FILE_N_SEQ_READ = int(5e6) # limit the amount of seq we read from file, helps reduce runtime
+LIMIT_FILE_N_SEQ_READ = int(1e6/2) # limit the amount of seq we read from file, helps reduce runtime
 ONE_HOT_DICT = {b'A': np.array([0,0,0,1], dtype=np.float16),
                 b'C': np.array([0.,0.,1,0], dtype=np.float16),
                 b'G': np.array([0,1,0,0], dtype=np.float16),
