@@ -1,9 +1,6 @@
 from constants import *
 
 """create master list of all sequences from the RBNS files and their labels"""
-    
-directory = '/data01/private/resources/RACHELI_EDEN_SHARED/DL_PROJ/RBNS_training' # create option to get it from args
-
 def get_RBNS_files(directory):
     """read all RBNS files in directory and return a list of all files name in directory"""
     RBNS_training_files = []
@@ -35,7 +32,7 @@ def create_master_list(RBNS_per_protein):
     n=0
     for file in RBNS_per_protein:
     #print(file_index)
-        file_path = '/data01/private/resources/RACHELI_EDEN_SHARED/DL_PROJ/RBNS_training/' + file
+        file_path = '/data01/private/resources/RACHELI_EDEN_SHARED/DL_PROJ/RBNS_training/' + file #TODO
         with open(file_path, 'r') as f:
             lines = [f.readline() for _ in range(LIMIT_FILE_N_SEQ_READ)] # read LIMIT_FILE_N_SEQ_READ lines
         # cut seq to 20 length randomly if len is longer find a random starting index and take 20 from there
@@ -61,7 +58,7 @@ def create_master_list(RBNS_per_protein):
 
 def create_class_labels(RBNS_per_protein,protein):
     """create class labels for each sequence in master list"""
-    N= LIMIT_FILE_N_SEQ_READ * len(RBNS_per_protein) # number of seqs
+    N = LIMIT_FILE_N_SEQ_READ * len(RBNS_per_protein) # number of seqs
     class_lables = np.zeros((N, len(RBNS_per_protein)), dtype=np.int8) # array of probolities per class
     for i, file in enumerate(RBNS_per_protein): # set the lables for the rest of the classes
         if file != str(protein + '_input.seq'):
@@ -90,6 +87,6 @@ def create_RNAcompete_master_list():
     return RNAcompete_master_list_one_hot, num_seqs, shifts_RNAcompete_master_list
 
 def y_target_per_protein(protein):
-    with open(f'/data01/private/resources/RACHELI_EDEN_SHARED/DL_PROJ/RNCMPT_training/{protein}.txt','r') as file:
+    with open(f'/data01/private/resources/RACHELI_EDEN_SHARED/DL_PROJ/RNCMPT_training/{protein}.txt','r') as file: #TODO
         y_target=np.array([float(line.strip()) for line in file if line != ""])
     return y_target

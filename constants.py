@@ -17,7 +17,7 @@ import scipy.stats as stats
 
 
 # 2) constants and hyperparameters
-Workers = 80
+Workers = 50
 MultiProcess = True
 L_RBNS = 20 # length of each sequence in RBNS data
 O = int(1e7) # for initializing big arrays, helps reduce runtime
@@ -40,7 +40,39 @@ ONE_HOT_DICT2 = {'A':[0,0,0,1],
                 }
 
 L_RBNS = 20 # length of each sequence in RBNS data
-FILES_40 = ["RBP9" , "RBP11", "RBP15", "RBP31"] # files  with sequences len 40 and not 20
-model_param_dict = {"kernel_size":3, "pool_size":2, "layers": [128, 128], "final_activation_function":"sigmoid"}
-PAD_SIZE = model_param_dict["kernel_size"] - 1
+FILES_40 = ["RBP9" , "RBP11", "RBP15", "RBP31"] # files with sequences len 40 and not 20
+
+
+# inputs --Hyperparameters
+# NEED TO CHECK
+NUM_KERNELS=128
+EPHOCHS=3
+BATCH_SIZE = 256
+KERNEL_SIZE=3
+
+STRIDES=1
+STRIDES_BIG=3
+
+# KEEP
+FINAL_ACTIVATION_FUNCTION="sigmoid"
+DROP_OUT=0.1
+LAYERS=[64,32,32]
+LR = 0.003
+
+PAD_SIZE = KERNEL_SIZE - 1 # TODO: make sure this is correct to the selected final kernel size
 SEQ_PADDED_LEN = 20 + 2 * PAD_SIZE
+
+# STRIDES = 1
+# STRIDES_BIG = 3
+# DROP_OUT = 0.2 # helps with overfitting
+# KERNEL_SIZE = [3, 5, 8]        
+# NUM_KERNELS = [32, 128, 512]
+# LAYERS = [128, 128] # ?
+# FINAL_ACTIVATION_FUNCTION = "sigmoid"
+# LR = [0.003, 0.01, 0.1] # convergence speed
+# BATCH_SIZE = 256 # ?
+# EPHOCHS = [3, 5, 7]
+# POOL_SIZE = [None, 2, 4] # lowers time complexity
+# POOL_TYPE = ["max", "avg"] # lowers time complexity
+
+

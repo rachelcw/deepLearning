@@ -15,28 +15,11 @@ def accuracy_th(y_true, y_pred):
     accuracy = tf.reduce_mean(tf.cast(tf.equal(y_true, y_pred_thresholded), tf.float32))  # Calculate the accuracy
     return accuracy
 
-
-# inputs --Hyperparameters
-# CUT_DATA = 5e6
-# STRIDES = 1
-# STRIDES_BIG = 3
-# DROP_OUT = 0.2 # helps with overfitting
-# KERNEL_SIZE = [3, 5, 8]        
-# NUM_KERNELS = [32, 128, 512]
-# LAYERS = [128, 128] # ?
-# FINAL_ACTIVATION_FUNCTION = "sigmoid"
-# LR = [0.003, 0.01, 0.1] # convergence speed
-# BATCH_SIZE = 256 # ?
-# EPHOCHS = [3, 5, 7]
-# POOL_SIZE = [None, 2, 4] # lowers time complexity
-# POOL_TYPE = ["max", "avg"] # lowers time complexity
-
 # create a CNN model per protein. input is one_hot seqs and output is prediction of probability of 6 class_lables
-def create_CNN_per_protein(X,Y,model_name,NUM_KERNELS=128,EPHOCHS=2,STRIDES=1,STRIDES_BIG=3,DROP_OUT=0.1,KERNEL_SIZE=[3,5],LAYERS=[64,32,32],
-                           FINAL_ACTIVATION_FUNCTION = "sigmoid",LR = 0.003,BATCH_SIZE = 256):
+def create_CNN_per_protein(X,Y,model_name):
     # shuffle data
     rng = np.random.default_rng(32)
-    CUT_DATA = int(1e6)
+    CUT_DATA = int(2e6)
     print(f'X shape is: {X.shape}')
     print(f'Y shape is: {Y.shape}')
     shuf_inds = rng.choice(X.shape[0], size=CUT_DATA, replace=False)
@@ -60,7 +43,7 @@ def create_CNN_per_protein(X,Y,model_name,NUM_KERNELS=128,EPHOCHS=2,STRIDES=1,ST
         model.add(Dense(layer_size, activation='relu'))
     model.add(Dense(6, activation='sigmoid'))
 
-    Adam = keras.optimizers.Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, decay=1e-5, amsgrad=False)
+    Adam = keras.optimizers.Adam(learning_rate=1e-3, beta_1=0.9, beta_2=0.999, decay=1e-5, amsgrad=False)
     model.compile(optimizer=Adam, loss='binary_crossentropy',metrics=[accuracy_th])
     ############################## our model ########################################
     # model.add(Conv1D(filters=NUM_KERNELS, kernel_size=KERNEL_SIZE[0], strides=STRIDES,
@@ -88,7 +71,7 @@ def create_CNN_per_protein(X,Y,model_name,NUM_KERNELS=128,EPHOCHS=2,STRIDES=1,ST
     return model
 
 # create features: MULTICLASS parallelize the prediction + output -  suppose predict gives N dim vector:
-def find_proteins_features(model, shifts_RNAcompete_master_list):
+def find_proteins_features(model, shifts_RNAcompete_master_list,protein):
     N = 6 # number of classes
     prediction = model.predict(shifts_RNAcompete_master_list, use_multiprocessing=MultiProcess, workers=Workers, verbose=2)
     _,num_seqs,_ = create_RNAcompete_master_list()
@@ -100,7 +83,7 @@ def find_proteins_features(model, shifts_RNAcompete_master_list):
 
     # # write pred into file
     # protein="RBP1"
-    # with open(f'/data01/private/resources/RACHELI_EDEN_SHARED/DL_PROJ/max_predicitions_{protein}.txt', "w") as file:
-    #     for pred in max_prediction:
-    #         file.write(f'{pred}\n')
+    with open(f'/data01/private/resources/RACHELI_EDEN_SHARED/DL_PROJ/features_predicitions_{protein}.txt', "w") as file:
+        for feature in features:
+            file.write(f"{feature}\n")
     return prediction, features
